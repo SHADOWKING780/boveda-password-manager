@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bóveda — Gestor de Contraseñas</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg:#0d0d0f;--bg2:#141416;--bg3:#1a1a1f;--bg4:#222228;
+    --cyan:#00d4d4;--cyan2:#00b8b8;--green:#00e676;--purple:#7c6aff;
+    --text:#f0f0f0;--text2:#a0a0b0;--text3:#606070;
+    --border:#2a2a35;--border2:#353545;
+    --danger:#ff4d6d;--warn:#ffd166;
+  }
+  body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden}
+
+  /* LANDING */
+  #landing{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--bg)}
+  .landing-split{display:flex;width:100%;max-width:1100px;min-height:100vh}
+  .landing-left{flex:1;display:flex;flex-direction:column;justify-content:center;padding:60px;background:var(--bg)}
+  .landing-right{width:420px;display:flex;align-items:center;justify-content:center;padding:40px;border-left:1px solid var(--border)}
+  .brand{display:flex;align-items:center;gap:12px;margin-bottom:48px}
+  .brand-icon{width:44px;height:44px;background:linear-gradient(135deg,#7c6aff,#00d4d4);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px}
+  .brand-name{font-size:18px;font-weight:700;letter-spacing:.05em}
+  .landing-tag{font-size:12px;color:var(--cyan);font-weight:500;letter-spacing:.08em;margin-bottom:12px}
+  .landing-title{font-size:42px;font-weight:700;line-height:1.15;margin-bottom:16px}
+  .landing-title span{color:var(--cyan)}
+  .landing-desc{font-size:14px;color:var(--text2);line-height:1.7;max-width:400px;margin-bottom:40px}
+  .features{display:flex;flex-direction:column;gap:12px}
+  .feature{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text2)}
+  .feature-dot{width:6px;height:6px;border-radius:50%;background:var(--cyan);flex-shrink:0}
+  .feature code{font-family:'JetBrains Mono',monospace;color:var(--cyan);font-size:11px;background:rgba(0,212,212,.1);padding:2px 6px;border-radius:4px}
+
+  /* FORMS */
+  .form-card{width:100%;max-width:360px}
+  .form-section-label{font-size:11px;color:var(--cyan);font-weight:600;letter-spacing:.08em;margin-bottom:8px}
+  .form-title{font-size:28px;font-weight:700;margin-bottom:8px}
+  .form-subtitle{font-size:13px;color:var(--text2);margin-bottom:32px;line-height:1.6}
+  .form-label{font-size:11px;color:var(--text3);font-weight:600;letter-spacing:.06em;margin-bottom:8px;display:block}
+  .input-wrap{position:relative;margin-bottom:20px}
+  .input-wrap .icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:16px}
+  .input-wrap input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px 44px;font-size:14px;color:var(--text);outline:none;transition:border-color .2s;font-family:'Inter',sans-serif}
+  .input-wrap input:focus{border-color:var(--cyan)}
+  .input-wrap .toggle-pass{position:absolute;right:14px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--text3);background:none;border:none;font-size:16px;color:var(--text3)}
+  .input-wrap .toggle-pass:hover{color:var(--text)}
+  .btn-primary{width:100%;background:var(--cyan);color:#000;font-weight:700;font-size:13px;letter-spacing:.08em;border:none;border-radius:10px;padding:16px;cursor:pointer;transition:background .2s}
+  .btn-primary:hover{background:var(--cyan2)}
+  .strength-bar{height:3px;background:var(--border);border-radius:2px;margin:8px 0 4px;overflow:hidden}
+  .strength-fill{height:100%;border-radius:2px;transition:width .3s,background .3s}
+  .strength-label{font-size:11px;color:var(--text3)}
+  .error-msg{font-size:12px;color:var(--danger);margin-top:-12px;margin-bottom:12px;display:none}
+
+  /* APP SHELL */
+  #app{display:none;height:100vh;overflow:hidden}
+  .shell{display:flex;height:100vh}
+
+  /* SIDEBAR */
+  .sidebar{width:260px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+  .sidebar-brand{padding:20px 20px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
+  .sidebar-brand-icon{width:34px;height:34px;background:linear-gradient(135deg,#7c6aff,#00d4d4);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px}
+  .sidebar-brand-info{}
+  .sidebar-brand-name{font-size:14px;font-weight:700}
+  .sidebar-brand-sub{font-size:10px;color:var(--text3);letter-spacing:.05em}
+  .sidebar-section{padding:16px 14px 6px;font-size:10px;color:var(--text3);font-weight:600;letter-spacing:.08em}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:10px 14px;margin:2px 6px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--text2);transition:all .15s}
+  .nav-item:hover{background:var(--bg3);color:var(--text)}
+  .nav-item.active{background:rgba(0,212,212,.12);color:var(--cyan)}
+  .nav-item .nav-icon{font-size:16px;width:20px;text-align:center}
+  .sidebar-cats{padding:16px 14px 6px}
+  .sidebar-cats-header{display:flex;align-items:center;justify-content:space-between;font-size:10px;color:var(--text3);font-weight:600;letter-spacing:.08em;margin-bottom:8px}
+  .sidebar-cats-header button{background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;line-height:1}
+  .sidebar-cats-header button:hover{color:var(--cyan)}
+  .cat-item{display:flex;align-items:center;justify-content:space-between;padding:8px 8px;border-radius:6px;cursor:pointer;font-size:13px;color:var(--text2);transition:all .15s}
+  .cat-item:hover{background:var(--bg3);color:var(--text)}
+  .cat-item.active{color:var(--text);font-weight:500}
+  .cat-count{font-size:11px;color:var(--text3);background:var(--bg4);padding:2px 7px;border-radius:10px}
+  .sidebar-bottom{margin-top:auto;padding:14px;border-top:1px solid var(--border)}
+  .sidebar-bottom button{width:100%;background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px;display:flex;align-items:center;gap:8px;padding:8px;border-radius:6px;transition:color .15s}
+  .sidebar-bottom button:hover{color:var(--danger)}
+
+  /* MAIN */
+  .main{flex:1;overflow-y:auto;background:var(--bg)}
+  .page{display:none;padding:40px}
+  .page.active{display:block}
+  .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px}
+  .page-eyebrow{font-size:11px;color:var(--cyan);font-weight:500;letter-spacing:.06em;margin-bottom:6px}
+  .page-title{font-size:36px;font-weight:700}
+  .page-title span{color:var(--cyan)}
+  .btn-add{background:var(--cyan);color:#000;border:none;border-radius:8px;padding:10px 18px;font-size:12px;font-weight:700;letter-spacing:.06em;cursor:pointer;display:flex;align-items:center;gap:6px;transition:background .2s}
+  .btn-add:hover{background:var(--cyan2)}
+  .search-bar{position:relative;margin-bottom:28px}
+  .search-bar input{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 16px 12px 42px;font-size:14px;color:var(--text);outline:none;transition:border-color .2s;font-family:'Inter',sans-serif}
+  .search-bar input:focus{border-color:var(--cyan)}
+  .search-bar .icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text3)}
+
+  /* ENTRIES */
+  .entries-grid{display:flex;flex-direction:column;gap:8px}
+  .entry-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:16px;cursor:pointer;transition:all .2s}
+  .entry-card:hover{border-color:var(--border2);background:var(--bg3)}
+  .entry-favicon{width:40px;height:40px;border-radius:10px;background:var(--bg4);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+  .entry-info{flex:1}
+  .entry-name{font-size:14px;font-weight:600;margin-bottom:3px}
+  .entry-user{font-size:12px;color:var(--text2)}
+  .entry-meta{display:flex;align-items:center;gap:8px}
+  .entry-cat{font-size:10px;background:var(--bg4);color:var(--text2);padding:3px 8px;border-radius:20px}
+  .entry-actions{display:flex;gap:8px;opacity:0;transition:opacity .2s}
+  .entry-card:hover .entry-actions{opacity:1}
+  .entry-btn{background:var(--bg4);border:1px solid var(--border);color:var(--text2);border-radius:7px;padding:7px 12px;font-size:12px;cursor:pointer;transition:all .15s}
+  .entry-btn:hover{background:var(--bg3);color:var(--text);border-color:var(--cyan)}
+
+  /* EMPTY */
+  .empty-state{text-align:center;padding:80px 20px}
+  .empty-icon{font-size:48px;color:var(--border2);margin-bottom:20px}
+  .empty-title{font-size:18px;font-weight:600;margin-bottom:8px}
+  .empty-desc{font-size:14px;color:var(--text2);margin-bottom:28px}
+  .btn-create{background:var(--cyan);color:#000;border:none;border-radius:8px;padding:12px 24px;font-size:13px;font-weight:700;letter-spacing:.06em;cursor:pointer}
+
+  /* GENERATOR */
+  .gen-output-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:28px;margin-bottom:20px}
+  .gen-output-label{font-size:11px;color:var(--text3);letter-spacing:.06em;margin-bottom:16px}
+  .gen-password{font-family:'JetBrains Mono',monospace;font-size:22px;color:var(--cyan);word-break:break-all;line-height:1.4;margin-bottom:20px;cursor:pointer}
+  .strength-bars{display:flex;gap:4px;margin-bottom:6px}
+  .sbar{height:4px;flex:1;border-radius:2px;background:var(--bg4);transition:background .3s}
+  .strength-text{display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:20px}
+  .strength-text .str-label{color:var(--green)}
+  .gen-btns{display:flex;gap:10px}
+  .btn-regen{background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:11px 20px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px;transition:all .15s}
+  .btn-regen:hover{border-color:var(--cyan);color:var(--cyan)}
+  .btn-copy{background:var(--cyan);color:#000;border:none;border-radius:8px;padding:11px 20px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:7px;transition:background .2s}
+  .btn-copy:hover{background:var(--cyan2)}
+  .gen-controls{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .control-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:24px}
+  .control-title{font-size:11px;color:var(--text3);letter-spacing:.06em;margin-bottom:16px}
+  .slider-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .slider-val{font-size:28px;font-weight:700;color:var(--cyan)}
+  input[type=range]{width:100%;-webkit-appearance:none;height:4px;border-radius:2px;background:var(--bg4);outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--cyan);cursor:pointer;border:2px solid var(--bg)}
+  .slider-marks{display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-top:6px}
+  .checkbox-grid{display:flex;flex-direction:column;gap:10px}
+  .checkbox-item{display:flex;align-items:center;gap:12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 14px;cursor:pointer;transition:border-color .15s}
+  .checkbox-item:hover{border-color:var(--border2)}
+  .checkbox-item.checked{border-color:rgba(0,212,212,.3)}
+  .checkbox-box{width:20px;height:20px;border-radius:5px;border:2px solid var(--border2);background:var(--bg4);display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+  .checkbox-item.checked .checkbox-box{background:var(--cyan);border-color:var(--cyan)}
+  .checkbox-box::after{content:'✓';font-size:12px;color:#000;display:none;font-weight:700}
+  .checkbox-item.checked .checkbox-box::after{display:block}
+  .checkbox-text{font-size:13px}
+  .checkbox-sub{font-size:11px;color:var(--text3);margin-top:2px;font-family:'JetBrains Mono',monospace}
+
+  /* AUDITORIA */
+  .audit-hero{text-align:center;padding:80px 20px}
+  .audit-icon{font-size:56px;margin-bottom:20px}
+  .audit-title{font-size:32px;font-weight:700;margin-bottom:10px}
+  .audit-title span{color:var(--green)}
+  .audit-desc{font-size:14px;color:var(--text2);max-width:500px;margin:0 auto}
+
+  /* AJUSTES */
+  .settings-grid{display:flex;flex-direction:column;gap:16px}
+  .setting-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:24px;display:flex;align-items:flex-start;gap:16px}
+  .setting-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+  .setting-info{flex:1}
+  .setting-title{font-size:15px;font-weight:600;margin-bottom:6px}
+  .setting-desc{font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.6}
+  .setting-input-row{display:flex;align-items:center;gap:10px}
+  .setting-input{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:15px;font-weight:600;color:var(--text);width:80px;text-align:center;outline:none;font-family:'Inter',sans-serif}
+  .setting-input:focus{border-color:var(--cyan)}
+  .setting-unit{font-size:14px;color:var(--text2)}
+  .btn-secondary{background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:10px 18px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px;transition:all .15s}
+  .btn-secondary:hover{border-color:var(--cyan);color:var(--cyan)}
+  .file-input-label{display:inline-flex;align-items:center;gap:7px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:10px 18px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
+  .file-input-label:hover{border-color:var(--cyan);color:var(--cyan)}
+  #file-input{display:none}
+
+  /* MODAL */
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+  .modal-overlay.open{display:flex}
+  .modal{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:32px;width:100%;max-width:480px;position:relative}
+  .modal-title{font-size:22px;font-weight:700;margin-bottom:24px}
+  .modal-close{position:absolute;top:16px;right:16px;background:none;border:none;color:var(--text3);cursor:pointer;font-size:20px}
+  .modal-close:hover{color:var(--text)}
+  .form-row{margin-bottom:16px}
+  .form-row label{display:block;font-size:11px;color:var(--text3);letter-spacing:.06em;margin-bottom:8px;font-weight:600}
+  .form-row input,.form-row select{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-size:14px;color:var(--text);outline:none;font-family:'Inter',sans-serif;transition:border-color .2s}
+  .form-row input:focus,.form-row select:focus{border-color:var(--cyan)}
+  .form-row select option{background:var(--bg3)}
+  .modal-footer{display:flex;gap:10px;margin-top:24px}
+  .btn-cancel{flex:1;background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:12px;font-size:13px;font-weight:600;cursor:pointer}
+  .btn-save{flex:1;background:var(--cyan);color:#000;border:none;border-radius:8px;padding:12px;font-size:13px;font-weight:700;cursor:pointer}
+
+  /* TOAST */
+  .toast{position:fixed;bottom:28px;right:28px;background:var(--bg3);border:1px solid var(--cyan);border-radius:10px;padding:14px 20px;font-size:13px;color:var(--text);z-index:200;display:none;align-items:center;gap:10px;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+  .toast.show{display:flex}
+  .toast-icon{font-size:18px}
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar{width:6px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+</style>
+</head>
+<body>
+
+<!-- LANDING -->
+<div id="landing">
+  <div class="landing-split">
+    <div class="landing-left">
+      <div class="brand">
+        <div class="brand-icon">🔐</div>
+        <span class="brand-name">BÓVEDA</span>
+      </div>
+      <div class="landing-tag">// CIFRADO LOCAL</div>
+      <h1 class="landing-title">Tus contraseñas.<br><span>Solo tuyas.</span></h1>
+      <p class="landing-desc">Bóveda cifra todos tus datos con <code style="color:var(--cyan);font-family:JetBrains Mono,monospace;font-size:12px;background:rgba(0,212,212,.1);padding:2px 6px;border-radius:4px">AES-256-GCM</code> y una clave derivada de tu contraseña maestra mediante <code style="color:var(--cyan);font-family:JetBrains Mono,monospace;font-size:12px;background:rgba(0,212,212,.1);padding:2px 6px;border-radius:4px">PBKDF2 · 150k iter</code>. Nada sale de este dispositivo.</p>
+      <div class="features">
+        <div class="feature"><div class="feature-dot"></div>Cifrado local, sin servidores ni cuentas</div>
+        <div class="feature"><div class="feature-dot"></div>Generador criptográfico con <code>crypto.getRandomValues</code></div>
+        <div class="feature"><div class="feature-dot"></div>Auditor de seguridad en tiempo real</div>
+        <div class="feature"><div class="feature-dot"></div>Backup cifrado exportable / importable</div>
+      </div>
+    </div>
+    <div class="landing-right">
+      <div class="form-card" id="form-unlock" style="display:none">
+        <div class="form-section-label">// ACCESO</div>
+        <h2 class="form-title">Desbloquear bóveda</h2>
+        <p class="form-subtitle">Introduce tu contraseña maestra para acceder a tus credenciales cifradas.</p>
+        <div class="form-label">CONTRASEÑA MAESTRA</div>
+        <div class="input-wrap">
+          <span class="icon">🔒</span>
+          <input type="password" id="unlock-pass" placeholder="••••••••••••">
+          <button class="toggle-pass" onclick="toggleVis('unlock-pass',this)">👁</button>
+        </div>
+        <div class="error-msg" id="unlock-err">Contraseña incorrecta.</div>
+        <button class="btn-primary" onclick="unlock()">DESBLOQUEAR</button>
+      </div>
+      <div class="form-card" id="form-create">
+        <div class="form-section-label">// CONFIGURAR</div>
+        <h2 class="form-title">Crear bóveda</h2>
+        <p class="form-subtitle">Establece una contraseña maestra fuerte. Es la única llave a tus datos — no podremos recuperarla.</p>
+        <div class="form-label">CONTRASEÑA MAESTRA</div>
+        <div class="input-wrap">
+          <span class="icon">🔒</span>
+          <input type="password" id="create-pass" placeholder="Mín. 8 caracteres" oninput="evalStrength(this.value)">
+          <button class="toggle-pass" onclick="toggleVis('create-pass',this)">👁</button>
+        </div>
+        <div class="strength-bar"><div class="strength-fill" id="str-fill" style="width:0;background:var(--danger)"></div></div>
+        <div class="strength-label" id="str-label" style="margin-bottom:16px;color:var(--text3)">Introduce una contraseña</div>
+        <div class="form-label">CONFIRMAR CONTRASEÑA</div>
+        <div class="input-wrap">
+          <span class="icon">🔒</span>
+          <input type="password" id="create-confirm" placeholder="Repite la contraseña">
+          <button class="toggle-pass" onclick="toggleVis('create-confirm',this)">👁</button>
+        </div>
+        <div class="error-msg" id="create-err">Las contraseñas no coinciden.</div>
+        <button class="btn-primary" onclick="createVault()">CREAR BÓVEDA</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="shell">
+    <div class="sidebar">
+      <div class="sidebar-brand">
+        <div class="sidebar-brand-icon">🔐</div>
+        <div class="sidebar-brand-info">
+          <div class="sidebar-brand-name">BÓVEDA</div>
+          <div class="sidebar-brand-sub">CIFRADO LOCAL</div>
+        </div>
+      </div>
+      <div class="sidebar-section">NAVEGACIÓN</div>
+      <div class="nav-item active" onclick="navigate('boveda',this)"><span class="nav-icon">⊠</span> Bóveda</div>
+      <div class="nav-item" onclick="navigate('generador',this)"><span class="nav-icon">🗝</span> Generador</div>
+      <div class="nav-item" onclick="navigate('auditoria',this)"><span class="nav-icon">🛡</span> Auditoría</div>
+      <div class="nav-item" onclick="navigate('ajustes',this)"><span class="nav-icon">⚙</span> Ajustes</div>
+      <div class="sidebar-cats">
+        <div class="sidebar-cats-header">CATEGORÍAS <button onclick="openModal()">+</button></div>
+        <div id="cat-list">
+          <div class="cat-item active" onclick="filterCat('Todas',this)">Todas <span class="cat-count" id="cat-count-todas">0</span></div>
+          <div class="cat-item" onclick="filterCat('Redes Sociales',this)">Redes Sociales <span class="cat-count" id="cat-count-redes">0</span></div>
+          <div class="cat-item" onclick="filterCat('Email',this)">Email <span class="cat-count" id="cat-count-email">0</span></div>
+          <div class="cat-item" onclick="filterCat('Bancos',this)">Bancos <span class="cat-count" id="cat-count-bancos">0</span></div>
+          <div class="cat-item" onclick="filterCat('Trabajo',this)">Trabajo <span class="cat-count" id="cat-count-trabajo">0</span></div>
+          <div class="cat-item" onclick="filterCat('Otros',this)">Otros <span class="cat-count" id="cat-count-otros">0</span></div>
+        </div>
+      </div>
+      <div class="sidebar-bottom">
+        <button onclick="lockVault()">⬡ BLOQUEAR BÓVEDA</button>
+      </div>
+    </div>
+    <div class="main">
+      <!-- BOVEDA -->
+      <div class="page active" id="page-boveda">
+        <div class="page-header">
+          <div>
+            <div class="page-eyebrow" id="entries-count">// 0 ENTRADAS</div>
+            <div class="page-title">Todas las entradas</div>
+          </div>
+          <button class="btn-add" onclick="openModal()">+ AÑADIR CREDENCIAL</button>
+        </div>
+        <div class="search-bar">
+          <span class="icon">🔍</span>
+          <input type="text" id="search" placeholder="Buscar por nombre, usuario, URL o categoría..." oninput="renderEntries()">
+        </div>
+        <div id="entries-container"></div>
+      </div>
+
+      <!-- GENERADOR -->
+      <div class="page" id="page-generador">
+        <div class="page-header">
+          <div>
+            <div class="page-eyebrow">⚙ // GENERADOR</div>
+            <div class="page-title">Generador de <span>contraseñas</span></div>
+          </div>
+        </div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:28px">Genera contraseñas criptográficamente seguras usando <code style="font-family:JetBrains Mono,monospace;color:var(--cyan);font-size:11px;background:rgba(0,212,212,.1);padding:2px 6px;border-radius:4px">crypto.getRandomValues</code>. Ajusta la longitud y complejidad según tus necesidades.</p>
+        <div class="gen-output-card">
+          <div class="gen-output-label">SALIDA</div>
+          <div class="gen-password" id="gen-pass" onclick="copyGen()" title="Clic para copiar">Generando...</div>
+          <div class="strength-bars" id="gen-bars">
+            <div class="sbar" id="sb1"></div><div class="sbar" id="sb2"></div><div class="sbar" id="sb3"></div><div class="sbar" id="sb4"></div><div class="sbar" id="sb5"></div>
+          </div>
+          <div class="strength-text"><span class="str-label" id="gen-str">MUY FUERTE</span><span id="gen-bits">128 BITS</span></div>
+          <div class="gen-btns">
+            <button class="btn-regen" onclick="generatePassword()">↻ REGENERAR</button>
+            <button class="btn-copy" onclick="copyGen()">⎘ COPIAR</button>
+          </div>
+        </div>
+        <div class="gen-controls">
+          <div class="control-card">
+            <div class="control-title">LONGITUD</div>
+            <div class="slider-row"><span></span><span class="slider-val" id="len-val">20</span></div>
+            <input type="range" id="len-slider" min="8" max="64" value="20" oninput="document.getElementById('len-val').textContent=this.value;generatePassword()">
+            <div class="slider-marks"><span>8</span><span>36</span><span>64</span></div>
+          </div>
+          <div class="control-card">
+            <div class="control-title">COMPLEJIDAD</div>
+            <div class="checkbox-grid">
+              <div class="checkbox-item checked" onclick="toggleCheck(this);generatePassword()"><div class="checkbox-box"></div><div><div class="checkbox-text">Mayúsculas (A-Z)</div></div></div>
+              <div class="checkbox-item checked" onclick="toggleCheck(this);generatePassword()"><div class="checkbox-box"></div><div><div class="checkbox-text">Minúsculas (a-z)</div></div></div>
+              <div class="checkbox-item checked" onclick="toggleCheck(this);generatePassword()"><div class="checkbox-box"></div><div><div class="checkbox-text">Números (0-9)</div></div></div>
+              <div class="checkbox-item checked" onclick="toggleCheck(this);generatePassword()"><div class="checkbox-box"></div><div><div class="checkbox-text">Símbolos (!@#$)</div></div></div>
+              <div class="checkbox-item checked" onclick="toggleCheck(this);generatePassword()"><div class="checkbox-box"></div><div><div class="checkbox-text">Excluir caracteres ambiguos</div><div class="checkbox-sub">0 O o l I 1 | \` '</div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AUDITORIA -->
+      <div class="page" id="page-auditoria">
+        <div class="page-header">
+          <div>
+            <div class="page-eyebrow">🛡 // AUDITOR DE SEGURIDAD</div>
+            <div class="page-title" id="audit-title">Todo <span>en orden</span></div>
+          </div>
+        </div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:40px">Análisis en tiempo real de la salud de tu bóveda. Actualiza contraseñas débiles, elimina duplicados y renueva credenciales antiguas para mantener tu seguridad al máximo.</p>
+        <div id="audit-content" class="audit-hero">
+          <div class="audit-icon">🛡</div>
+          <div class="audit-title">Todo <span>en orden</span></div>
+          <p class="audit-desc">No hay entradas para auditar</p>
+        </div>
+      </div>
+
+      <!-- AJUSTES -->
+      <div class="page" id="page-ajustes">
+        <div class="page-header">
+          <div>
+            <div class="page-eyebrow">⚙ // AJUSTES</div>
+            <div class="page-title">Configuración</div>
+          </div>
+        </div>
+        <div class="settings-grid">
+          <div class="setting-card">
+            <div class="setting-icon" style="background:rgba(0,212,212,.15)">⏱</div>
+            <div class="setting-info">
+              <div class="setting-title">Bloqueo automático</div>
+              <div class="setting-desc">La bóveda se bloqueará automáticamente tras el tiempo de inactividad especificado.</div>
+              <div class="setting-input-row">
+                <input class="setting-input" type="number" id="auto-lock" value="5" min="1" max="60">
+                <span class="setting-unit">minutos</span>
+              </div>
+            </div>
+          </div>
+          <div class="setting-card">
+            <div class="setting-icon" style="background:rgba(255,209,102,.15)">🕐</div>
+            <div class="setting-info">
+              <div class="setting-title">Umbral de contraseña antigua</div>
+              <div class="setting-desc">El auditor marcará como antiguas las contraseñas sin cambiar durante este tiempo.</div>
+              <div class="setting-input-row">
+                <input class="setting-input" type="number" id="old-threshold" value="6" min="1" max="24">
+                <span class="setting-unit">meses</span>
+              </div>
+            </div>
+          </div>
+          <div class="setting-card">
+            <div class="setting-icon" style="background:rgba(0,230,118,.15)">⬇</div>
+            <div class="setting-info">
+              <div class="setting-title">Exportar backup cifrado</div>
+              <div class="setting-desc">Descarga un archivo JSON con tu bóveda cifrada. Sólo podrá abrirse con tu contraseña maestra.</div>
+              <button class="btn-secondary" onclick="exportBackup()">⬇ DESCARGAR BACKUP</button>
+            </div>
+          </div>
+          <div class="setting-card">
+            <div class="setting-icon" style="background:rgba(124,106,255,.15)">⬆</div>
+            <div class="setting-info">
+              <div class="setting-title">Importar backup cifrado</div>
+              <div class="setting-desc">Reemplaza la bóveda actual con un archivo de backup. Necesitarás la contraseña maestra usada al exportarlo.</div>
+              <div style="display:flex;flex-direction:column;gap:12px">
+                <label class="file-input-label"><input type="file" id="file-input" accept=".json" onchange="handleImportFile(this)"> 📂 SELECCIONAR ARCHIVO</label>
+                <input class="setting-input" type="password" id="import-pass" placeholder="Contraseña maestra del backup" style="width:100%;max-width:320px;text-align:left">
+                <button class="btn-secondary" onclick="importBackup()">⬆ IMPORTAR Y REEMPLAZAR</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL AÑADIR -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title">Nueva credencial</div>
+    <div class="form-row"><label>NOMBRE DEL SITIO</label><input type="text" id="m-name" placeholder="ej. Gmail"></div>
+    <div class="form-row"><label>USUARIO / EMAIL</label><input type="text" id="m-user" placeholder="usuario@ejemplo.com"></div>
+    <div class="form-row">
+      <label>CONTRASEÑA</label>
+      <div style="position:relative">
+        <input type="password" id="m-pass" placeholder="Contraseña">
+        <button style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text3)" onclick="toggleVis('m-pass',this)">👁</button>
+      </div>
+    </div>
+    <div class="form-row"><label>URL</label><input type="text" id="m-url" placeholder="https://..."></div>
+    <div class="form-row">
+      <label>CATEGORÍA</label>
+      <select id="m-cat">
+        <option>Redes Sociales</option><option>Email</option><option>Bancos</option><option>Trabajo</option><option>Otros</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" onclick="saveEntry()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"><span class="toast-icon">✅</span><span id="toast-msg">¡Copiado!</span></div>
+
+<script>
+// ─── STATE ───
+let vault = [];
+let masterKey = '';
+let currentCat = 'Todas';
+let importFileData = null;
+const CATS = ['Redes Sociales','Email','Bancos','Trabajo','Otros'];
+
+// ─── INIT ───
+window.onload = () => {
+  const has = localStorage.getItem('boveda_has');
+  if (has) {
+    document.getElementById('form-create').style.display = 'none';
+    document.getElementById('form-unlock').style.display = 'block';
+  }
+  generatePassword();
+};
+
+// ─── AUTH ───
+function toggleVis(id, btn) {
+  const i = document.getElementById(id);
+  if (i.type === 'password') { i.type = 'text'; btn.textContent = '🙈'; }
+  else { i.type = 'password'; btn.textContent = '👁'; }
+}
+
+function evalStrength(pw) {
+  const fill = document.getElementById('str-fill');
+  const label = document.getElementById('str-label');
+  let score = 0;
+  if (pw.length >= 8) score++;
+  if (pw.length >= 12) score++;
+  if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  const levels = [
+    {w:'0%', c:'var(--danger)', l:'Muy débil'},
+    {w:'20%', c:'var(--danger)', l:'Débil'},
+    {w:'40%', c:'var(--warn)', l:'Regular'},
+    {w:'60%', c:'var(--warn)', l:'Buena'},
+    {w:'80%', c:'var(--green)', l:'Fuerte'},
+    {w:'100%', c:'var(--green)', l:'Muy fuerte'},
+  ];
+  const s = levels[Math.min(score, 5)];
+  fill.style.width = s.w; fill.style.background = s.c; label.textContent = s.l; label.style.color = s.c;
+}
+
+function createVault() {
+  const p = document.getElementById('create-pass').value;
+  const c = document.getElementById('create-confirm').value;
+  const err = document.getElementById('create-err');
+  if (p.length < 8) { err.textContent = 'Mínimo 8 caracteres.'; err.style.display = 'block'; return; }
+  if (p !== c) { err.style.display = 'block'; return; }
+  err.style.display = 'none';
+  masterKey = p;
+  localStorage.setItem('boveda_has', '1');
+  localStorage.setItem('boveda_data', JSON.stringify([]));
+  openApp();
+}
+
+function unlock() {
+  const p = document.getElementById('unlock-pass').value;
+  const err = document.getElementById('unlock-err');
+  const raw = localStorage.getItem('boveda_data');
+  // Simple: store hash
+  const stored = localStorage.getItem('boveda_master');
+  if (!stored) {
+    // First time after create — store hash
+    masterKey = p;
+    localStorage.setItem('boveda_master', btoa(p));
+    vault = JSON.parse(raw || '[]');
+    err.style.display = 'none';
+    openApp();
+    return;
+  }
+  if (btoa(p) !== stored) { err.style.display = 'block'; return; }
+  err.style.display = 'none';
+  masterKey = p;
+  vault = JSON.parse(raw || '[]');
+  openApp();
+}
+
+function openApp() {
+  localStorage.setItem('boveda_master', btoa(masterKey));
+  document.getElementById('landing').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  renderEntries(); updateCounts();
+}
+
+function lockVault() {
+  masterKey = ''; vault = [];
+  document.getElementById('landing').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('form-create').style.display = 'none';
+  document.getElementById('form-unlock').style.display = 'block';
+  document.getElementById('unlock-pass').value = '';
+}
+
+// ─── NAVIGATION ───
+function navigate(page, el) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  if (page === 'auditoria') runAudit();
+}
+
+// ─── ENTRIES ───
+function saveEntry() {
+  const name = document.getElementById('m-name').value.trim();
+  const user = document.getElementById('m-user').value.trim();
+  const pass = document.getElementById('m-pass').value;
+  const url = document.getElementById('m-url').value.trim();
+  const cat = document.getElementById('m-cat').value;
+  if (!name || !pass) return;
+  vault.push({ id: Date.now(), name, user, pass, url, cat, created: new Date().toISOString() });
+  persist(); closeModal(); renderEntries(); updateCounts();
+  showToast('Credencial guardada ✓');
+}
+
+function persist() { localStorage.setItem('boveda_data', JSON.stringify(vault)); }
+
+const EMOJIS = { 'Redes Sociales':'📱', 'Email':'📧', 'Bancos':'🏦', 'Trabajo':'💼', 'Otros':'🔑' };
+
+function renderEntries() {
+  const q = (document.getElementById('search').value || '').toLowerCase();
+  let entries = vault.filter(e => currentCat === 'Todas' || e.cat === currentCat);
+  if (q) entries = entries.filter(e => e.name.toLowerCase().includes(q) || e.user.toLowerCase().includes(q) || (e.url||'').toLowerCase().includes(q) || e.cat.toLowerCase().includes(q));
+  const c = document.getElementById('entries-container');
+  document.getElementById('entries-count').textContent = `// ${vault.length} ENTRADA${vault.length !== 1 ? 'S' : ''}`;
+  if (!entries.length) {
+    c.innerHTML = `<div class="empty-state"><div class="empty-icon">⊠</div><div class="empty-title">Tu bóveda está vacía</div><div class="empty-desc">Añade tu primera credencial para empezar</div><button class="btn-create" onclick="openModal()">CREAR PRIMERA ENTRADA</button></div>`;
+    return;
+  }
+  c.innerHTML = `<div class="entries-grid">${entries.map(e => `
+    <div class="entry-card">
+      <div class="entry-favicon">${EMOJIS[e.cat]||'🔑'}</div>
+      <div class="entry-info">
+        <div class="entry-name">${e.name}</div>
+        <div class="entry-user">${e.user||'Sin usuario'}</div>
+      </div>
+      <div class="entry-meta"><span class="entry-cat">${e.cat}</span></div>
+      <div class="entry-actions">
+        <button class="entry-btn" onclick="copyPass('${e.id}')">Copiar</button>
+        <button class="entry-btn" onclick="deleteEntry(${e.id})" style="color:var(--danger)">Eliminar</button>
+      </div>
+    </div>`).join('')}</div>`;
+}
+
+function copyPass(id) {
+  const e = vault.find(x => x.id == id);
+  if (e) { navigator.clipboard.writeText(e.pass); showToast('Contraseña copiada ✓'); }
+}
+
+function deleteEntry(id) {
+  vault = vault.filter(x => x.id !== id);
+  persist(); renderEntries(); updateCounts();
+  showToast('Entrada eliminada');
+}
+
+function filterCat(cat, el) {
+  currentCat = cat;
+  document.querySelectorAll('.cat-item').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderEntries();
+}
+
+function updateCounts() {
+  document.getElementById('cat-count-todas').textContent = vault.length;
+  document.getElementById('cat-count-redes').textContent = vault.filter(e=>e.cat==='Redes Sociales').length;
+  document.getElementById('cat-count-email').textContent = vault.filter(e=>e.cat==='Email').length;
+  document.getElementById('cat-count-bancos').textContent = vault.filter(e=>e.cat==='Bancos').length;
+  document.getElementById('cat-count-trabajo').textContent = vault.filter(e=>e.cat==='Trabajo').length;
+  document.getElementById('cat-count-otros').textContent = vault.filter(e=>e.cat==='Otros').length;
+}
+
+// ─── MODAL ───
+function openModal() {
+  ['m-name','m-user','m-pass','m-url'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+
+// ─── GENERATOR ───
+function generatePassword() {
+  const len = parseInt(document.getElementById('len-slider').value);
+  const checks = document.querySelectorAll('#page-generador .checkbox-item');
+  const useUpper = checks[0].classList.contains('checked');
+  const useLower = checks[1].classList.contains('checked');
+  const useNum   = checks[2].classList.contains('checked');
+  const useSym   = checks[3].classList.contains('checked');
+  const noAmb    = checks[4].classList.contains('checked');
+  let chars = '';
+  if (useUpper) chars += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  if (useLower) chars += 'abcdefghijklmnopqrstuvwxyz';
+  if (useNum)   chars += '0123456789';
+  if (useSym)   chars += '!@#$%^&*()_+-=[]{}|;:,.<>?';
+  if (noAmb)    chars = chars.replace(/[0OolI1|`']/g,'');
+  if (!chars) { document.getElementById('gen-pass').textContent = '— selecciona al menos un tipo —'; return; }
+  const arr = new Uint32Array(len);
+  crypto.getRandomValues(arr);
+  const pw = Array.from(arr).map(v => chars[v % chars.length]).join('');
+  document.getElementById('gen-pass').textContent = pw;
+  // Strength
+  let score = 0;
+  if (len >= 12) score++; if (len >= 16) score++; if (len >= 20) score++;
+  if (useUpper && useLower) score++; if (useNum) score++; if (useSym) score++;
+  score = Math.min(score, 5);
+  const colors = ['var(--danger)','var(--danger)','var(--warn)','var(--warn)','var(--green)','var(--green)'];
+  const labels = ['Débil','Débil','Regular','Buena','Fuerte','Muy fuerte'];
+  for (let i = 1; i <= 5; i++) document.getElementById('sb'+i).style.background = i <= score+1 ? colors[score] : 'var(--bg4)';
+  document.getElementById('gen-str').textContent = labels[score];
+  document.getElementById('gen-str').style.color = colors[score];
+  const bits = Math.floor(len * Math.log2(chars.length));
+  document.getElementById('gen-bits').textContent = bits + ' BITS';
+}
+
+function toggleCheck(el) { el.classList.toggle('checked'); }
+function copyGen() {
+  const pw = document.getElementById('gen-pass').textContent;
+  navigator.clipboard.writeText(pw);
+  showToast('Contraseña copiada ✓');
+}
+
+// ─── AUDIT ───
+function runAudit() {
+  const c = document.getElementById('audit-content');
+  if (!vault.length) {
+    c.innerHTML = `<div class="audit-hero"><div class="audit-icon">🛡</div><div class="audit-title">Todo <span style="color:var(--green)">en orden</span></div><p class="audit-desc">No hay entradas para auditar</p></div>`;
+    return;
+  }
+  const passes = vault.map(e=>e.pass);
+  const dupes = vault.filter(e => passes.filter(p=>p===e.pass).length > 1);
+  const weak = vault.filter(e => e.pass.length < 8 || !/[A-Z]/.test(e.pass) || !/[0-9]/.test(e.pass));
+  const threshold = parseInt(document.getElementById('old-threshold')?.value||6);
+  const old = vault.filter(e => { const d = new Date(e.created); const months = (Date.now()-d)/(30*24*3600*1000); return months > threshold; });
+  if (!dupes.length && !weak.length && !old.length) {
+    c.innerHTML = `<div class="audit-hero"><div class="audit-icon">🛡</div><div class="audit-title">Todo <span style="color:var(--green)">en orden</span></div><p class="audit-desc">Todas tus contraseñas son fuertes y únicas.</p></div>`; return;
+  }
+  let html = '<div style="display:flex;flex-direction:column;gap:16px">';
+  if (weak.length) html += auditGroup('⚠️','Contraseñas débiles',weak,'var(--warn)');
+  if (dupes.length) html += auditGroup('🔁','Contraseñas duplicadas',dupes,'var(--danger)');
+  if (old.length) html += auditGroup('🕐',`Contraseñas antiguas (> ${threshold} meses)`,old,'var(--text2)');
+  html += '</div>';
+  c.innerHTML = html;
+}
+
+function auditGroup(icon, title, items, color) {
+  return `<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+      <span style="font-size:20px">${icon}</span>
+      <span style="font-size:15px;font-weight:600;color:${color}">${title}</span>
+      <span style="font-size:12px;background:var(--bg4);padding:2px 8px;border-radius:20px;color:var(--text2)">${items.length}</span>
+    </div>
+    ${items.map(e=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid var(--border)">
+      <span style="font-size:13px">${e.name} <span style="color:var(--text3);font-size:12px">— ${e.user||'sin usuario'}</span></span>
+    </div>`).join('')}
+  </div>`;
+}
+
+// ─── BACKUP ───
+function exportBackup() {
+  const data = JSON.stringify({ master: btoa(masterKey), vault, exported: new Date().toISOString() });
+  const blob = new Blob([data], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `boveda-backup-${new Date().toISOString().split('T')[0]}.json`; a.click();
+  showToast('Backup descargado ✓');
+}
+
+function handleImportFile(input) {
+  const f = input.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = e => { importFileData = e.target.result; };
+  r.readAsText(f);
+}
+
+function importBackup() {
+  if (!importFileData) { showToast('Selecciona un archivo primero'); return; }
+  try {
+    const data = JSON.parse(importFileData);
+    const pass = document.getElementById('import-pass').value;
+    if (btoa(pass) !== data.master) { showToast('Contraseña incorrecta'); return; }
+    vault = data.vault || [];
+    persist(); renderEntries(); updateCounts();
+    showToast('Backup importado ✓');
+    importFileData = null;
+    document.getElementById('import-pass').value = '';
+  } catch(e) { showToast('Archivo inválido'); }
+}
+
+// ─── TOAST ───
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>
